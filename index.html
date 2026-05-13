@@ -694,13 +694,14 @@ function updateDepFaixa(id) {
   const box = document.getElementById(`dep-prices-${id}`);
   if (!faixa || !state.plano || state.plano === 'nenhum') { box.classList.add('hidden'); return; }
   const valor = PLANOS[state.plano].valores[faixa] || 0;
-  if (dep) dep.valor = valor;
   const clrMap  = {'prata-tp':'#4A6070','prata-total':'#2563C0'};
   const nomeMap = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)'};
+  if (dep) dep.valor = valor;
   box.classList.remove('hidden');
-  document.getElementById(`dep-valor-${id}`).textContent = fmt(valor);
-  document.getElementById(`dep-valor-${id}`).style.color = clrMap[state.plano];
-  document.getElementById(`dep-plano-label-${id}`).textContent = nomeMap[state.plano]+' · '+faixa+' anos';
+  const valEl = document.getElementById(`dep-valor-${id}`);
+  valEl.textContent = fmt(valor);
+  valEl.style.color = clrMap[state.plano] || '#2563C0';
+  document.getElementById(`dep-plano-label-${id}`).textContent = (nomeMap[state.plano]||'')+' · '+faixa+' anos';
 }
 
 function removeDependent(id) {
@@ -797,9 +798,10 @@ async function sendToSheets() {
     plano: planoKey ? nomeMap[planoKey] : 'Sem interesse',
     valorTitular,
     totalMensal: totalGeral > 0 ? fmt(totalGeral) : '—',
-    qtdDependentes: state.dependentes.length,
-    ...depsData
+    qtdDependentes: state.addDeps ? state.dependentes.length : 0,
   };
+  // Só adiciona dependentes que existem
+  if (state.addDeps) Object.assign(payload, depsData);
 
   try {
     const form = new FormData();
