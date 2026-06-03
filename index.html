@@ -87,11 +87,11 @@
   .plans-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-bottom: 14px; }
   .plan-card { border: 2px solid var(--border); border-radius: 18px; padding: 22px 18px; cursor: pointer; transition: all 0.22s; background: #FAFBFE; position: relative; }
   .plan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
-  .plan-card.selected.prata-tp-card   { border-color: var(--silver); background: #F5F7FA; }
-  .plan-card.selected.prata-tot-card  { border-color: var(--blue); background: var(--blue-pale); }
-  .plan-card.selected.hapvida-card    { border-color: #7C3AED; background: #F5F0FF; }
-  .plan-card.selected.no-plan-card    { border-color: #B0BAC8; background: #F7F8FA; }
-  .hapvida-badge { background: rgba(124,58,237,0.10); color: #7C3AED; }
+  .plan-card.selected.hapvida-par-card { border-color: #D97706; background: #FFFBEB; }
+  .plan-card.selected.hapvida-tot-card { border-color: #7C3AED; background: #F5F0FF; }
+  .plan-card.selected.no-plan-card     { border-color: #B0BAC8; background: #F7F8FA; }
+  .hapvida-par-badge { background: rgba(217,119,6,0.10); color: #D97706; }
+  .hapvida-tot-badge { background: rgba(124,58,237,0.10); color: #7C3AED; }
   .plan-tier-badge { font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; display: inline-block; margin-bottom: 10px; }
   .prata-tp-badge  { background: rgba(122,143,160,0.13); color: #4A6070; }
   .prata-tot-badge { background: rgba(37,99,192,0.10); color: var(--blue); }
@@ -206,7 +206,7 @@
   <div class="header">
     <div class="header-badge">💙 Corretora Amor à Vida</div>
     <h1>Simulador de <span>Plano de Saúde</span></h1>
-    <p>Conheça os planos Amil Prata e veja os valores por faixa etária</p>
+    <p>Conheça os planos Hapvida e veja os valores por faixa etária</p>
     <div class="disclaimer">⚠️ Os valores apresentados podem sofrer alterações sem aviso prévio.</div>
   </div>
 
@@ -272,22 +272,25 @@
       <!-- REDE -->
       <div class="rede-section hidden" id="redeSection">
         <div class="rede-toggle" id="redeToggle" onclick="toggleRede()">
-          🏥 <span>Ver rede credenciada — Goiânia</span>
+          🏥 <span>Ver rede credenciada — Hapvida (Regional)</span>
           <span id="redeArrow" style="margin-left:auto;transition:transform 0.3s;">▼</span>
         </div>
         <div class="rede-content" id="redeContent">
           <div class="rede-filters">
-            <span style="font-size:13px;font-weight:600;color:var(--text-mid);">Filtrar:</span>
+            <span style="font-size:13px;font-weight:600;color:var(--text-mid);">Filtrar por região:</span>
             <select id="filtroRede" onchange="renderRede()" style="padding:7px 32px 7px 10px;font-size:13px;border-radius:8px;border:1.5px solid var(--border);background:#FAFBFE;flex:1;min-width:140px;max-width:220px;appearance:none;background-image:url('data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 width=%2716%27 height=%2716%27 fill=%27%233A4A6A%27 viewBox=%270 0 16 16%27%3E%3Cpath d=%27M7.247 11.14L2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z%27/%3E%3C/svg%3E');background-repeat:no-repeat;background-position:right 10px center;">
-              <option value="todos">Todos os hospitais</option>
-              <option value="prata">Só cobertos pelo Prata</option>
+              <option value="todos">Todas as regiões</option>
+              <option value="Goiânia">Goiânia</option>
+              <option value="Aparecida de Goiânia">Aparecida de Goiânia</option>
+              <option value="Anápolis">Anápolis</option>
+              <option value="Edéia">Edéia</option>
             </select>
           </div>
           <div class="rede-table-wrap">
             <table>
               <thead><tr>
-                <th>Hospital / Laboratório</th>
-                <th class="center">Coberto</th>
+                <th>Hospital / Unidade</th>
+                <th>Região</th>
               </tr></thead>
               <tbody id="redeTbody"></tbody>
             </table>
@@ -372,24 +375,16 @@ const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbytOSqSdutND6dD3nuqh
 
 // ══ PLANOS ══
 const PLANOS = {
-  'prata-tp': {
-    nome: 'Amil Prata — Copart. TP',
-    desc: 'Coparticipação por procedimento',
+  'hapvida-par': {
+    nome: 'Hapvida — Nosso Plano QC (Copart. Parcial)',
+    desc: 'Coparticipação parcial por procedimento',
     valores: {
-      '19 a 23': 406.74, '24 a 28': 496.22, '29 a 33': 595.47,
-      '34 a 38': 625.24, '39 a 43': 687.77, '44 a 48': 859.71
+      '19 a 23': 226.59, '24 a 28': 253.78, '29 a 33': 291.85,
+      '34 a 38': 335.63, '39 a 43': 399.40, '44 a 48': 499.25
     }
   },
-  'prata-total': {
-    nome: 'Amil Prata — Copart. Total',
-    desc: 'Coparticipação total incluída',
-    valores: {
-      '19 a 23': 305.07, '24 a 28': 372.18, '29 a 33': 446.62,
-      '34 a 38': 468.96, '39 a 43': 515.86, '44 a 48': 644.83
-    }
-  },
-  'hapvida-qc': {
-    nome: 'Hapvida — Nosso Plano QC',
+  'hapvida-tot': {
+    nome: 'Hapvida — Nosso Plano QC (Copart. Total)',
     desc: 'Coparticipação total incluída',
     valores: {
       '19 a 23': 169.75, '24 a 28': 190.12, '29 a 33': 218.64,
@@ -400,93 +395,45 @@ const PLANOS = {
 
 // ══ REDE ══
 const REDE = [
-  { hospital:"IGOP", prata:false },
-  { hospital:"CLINICA DO ESPORTE", prata:false },
-  { hospital:"HOSPITAL SAO LUCAS", prata:true },
-  { hospital:"HOSPITAL E MATERNIDADE SANTA BARBARA", prata:true },
-  { hospital:"HOSPITAL DA MULHER", prata:false },
-  { hospital:"HOSPITAL DO RIM", prata:false },
-  { hospital:"HOSP DO CORACAO DE GOIAS", prata:false },
-  { hospital:"HOSPITAL DA CRIANCA", prata:true },
-  { hospital:"HOSP INFANTIL DE CAMPINAS", prata:false },
-  { hospital:"HOSPITAL UNIQUE", prata:false },
-  { hospital:"HOSPITAL DE ACIDENTADOS", prata:true },
-  { hospital:"HOSPITAL AMPARO", prata:true },
-  { hospital:"HOSPITAL SAO FRANCISCO DE ASSIS", prata:true },
-  { hospital:"HOSPITAL SANTA HELENA", prata:true },
-  { hospital:"INST ANGIOLOGIA DE GOIANIA", prata:false },
-  { hospital:"Centro de Especialidades Unimed", prata:false },
-  { hospital:"MATERNIDADE ELA", prata:true },
-  { hospital:"HOSPITAL ORTOPEDICO DE GOIANIA", prata:true },
-  { hospital:"HOSPITAL SAMARITANO", prata:false },
-  { hospital:"HOSPITAL ASMIGO", prata:false },
-  { hospital:"AMPARO MATERNIDADE", prata:true },
-  { hospital:"MATERNIDADE MODELO", prata:false },
-  { hospital:"HOSPITAL DE OLHOS DE GOIANIA", prata:true },
-  { hospital:"IMO - INSTITUTO DE MASTOLOGIA E ONCOLOGIA", prata:true },
-  { hospital:"HOSPITAL MAYA", prata:false },
-  { hospital:"HOSPITAL OTORRINO DE GOIANIA", prata:true },
-  { hospital:"LABORATORIO DOUTOR JARBAS DOLES", prata:true },
-  { hospital:"LABORATORIO SILVIO PINHEIRO DE LEMOS", prata:true },
-  { hospital:"PADRAO LABORATORIO CLINICO", prata:true },
-  { hospital:"LABORATORIO BASE", prata:true },
-  { hospital:"LABORATORIOS ALPHA", prata:true },
-  { hospital:"LABORATORIO UNIMED", prata:true },
+  { hospital:"Hospital América", regiao:"Goiânia" },
+  { hospital:"Hospital Jardim America — Hapvida Saúde", regiao:"Goiânia" },
+  { hospital:"Hospital Promed — Hapvida Saúde", regiao:"Goiânia" },
+  { hospital:"Pronto Atendimento Cora Coralina — Hapvida Saúde", regiao:"Goiânia" },
+  { hospital:"Pronto Atendimento Hapvida — Unidade Anápolis", regiao:"Anápolis" },
+  { hospital:"Pronto Atendimento Edéia — Hapvida Saúde", regiao:"Edéia" },
+  { hospital:"Hapvida Diagnóstico Vila Aparecida", regiao:"Aparecida de Goiânia" },
+  { hospital:"Hapvida — Centro de Imagem Jardim América", regiao:"Aparecida de Goiânia" },
 ];
 
 // ══ COPARTICIPAÇÃO ══
 const COPART = {
-  'prata-tp': {
-    title: 'Coparticipação — Amil Prata (Copart. TP)',
-    color: '#4A6070', bgColor: '#F5F7FA',
-    header: ['Grupo de Procedimentos', 'Limite por Item'],
+  'hapvida-par': {
+    title: 'Coparticipação — Hapvida Nosso Plano QC (Parcial)',
+    color: '#D97706', bgColor: '#FFFBEB',
+    header: ['Procedimento', 'Coparticipação'],
     rows: [
-      ['Consultas eletivas e clínicas','R$ 30,00'],
-      ['Consultas hospitalares PS','R$ 90,00'],
-      ['Exames básicos','R$ 25,00'],
-      ['Exames especiais','R$ 110,00'],
-      ['Procedimentos básicos','R$ 60,00'],
-      ['Procedimentos especiais','R$ 150,00'],
-      ['Fisioterapia','R$ 60,00'],
-      ['Fonoaudiologia','R$ 60,00'],
-      ['Nutrição','R$ 60,00'],
-      ['Psicoterapia','R$ 60,00'],
-      ['Terapia Ocupacional','R$ 60,00'],
-      ['Internação','R$ 220,00'],
+      ['Consultas Eletivas','—'],
+      ['Consultas de Urgência','—'],
+      ['Exames Simples','—'],
+      ['Exames Complexos','—'],
+      ['Terapias Especiais','R$ 78,87 por sessão'],
+      ['Demais Terapias','R$ 24,27 por sessão'],
     ],
-    note: '* Coparticipação aplicada por procedimento realizado.'
+    note: '* Coparticipação parcial aplicada por procedimento realizado. Plano Regional.'
   },
-  'prata-total': {
-    title: 'Coparticipação — Amil Prata (Copart. Total)',
-    color: '#2563C0', bgColor: '#EEF4FF',
-    header: ['Grupo de Procedimentos', 'Limite por Item'],
-    rows: [
-      ['Consultas eletivas e clínicas','R$ 30,00'],
-      ['Consultas hospitalares PS','R$ 90,00'],
-      ['Exames básicos','R$ 25,00'],
-      ['Exames especiais','R$ 110,00'],
-      ['Procedimentos básicos','R$ 60,00'],
-      ['Procedimentos especiais','R$ 150,00'],
-      ['Fisioterapia','R$ 60,00'],
-      ['Fonoaudiologia','R$ 60,00'],
-      ['Nutrição','R$ 60,00'],
-      ['Psicoterapia','R$ 60,00'],
-      ['Terapia Ocupacional','R$ 60,00'],
-      ['Internação','R$ 220,00'],
-    ],
-    note: '* Coparticipação total já incluída no valor mensal.'
-  },
-  'hapvida-qc': {
-    title: 'Coparticipação — Hapvida Nosso Plano QC',
+  'hapvida-tot': {
+    title: 'Coparticipação — Hapvida Nosso Plano QC (Total)',
     color: '#7C3AED', bgColor: '#F5F0FF',
-    header: ['Informação', 'Detalhe'],
+    header: ['Procedimento', 'Coparticipação'],
     rows: [
-      ['Operadora','Hapvida'],
-      ['Produto','Nosso Plano QC'],
-      ['Tipo de Coparticipação','Coparticipação Total'],
-      ['Abrangência','Nacional'],
+      ['Consultas Eletivas','R$ 25,42 (valor fixo)'],
+      ['Consultas de Urgência','R$ 43,63 (valor fixo)'],
+      ['Exames Simples','40% — limite R$ 45,79'],
+      ['Exames Complexos','40% — limite R$ 114,48'],
+      ['Terapias Especiais','R$ 78,87 por sessão'],
+      ['Demais Terapias','R$ 24,27 por sessão'],
     ],
-    note: '* Valores conforme apólice vigente. Coparticipação total já incluída no valor mensal.'
+    note: '* Coparticipação total já incluída no valor mensal. Plano Regional.'
   }
 };
 
@@ -533,9 +480,8 @@ function renderPlans() {
   grid.innerHTML = '';
 
   const tiers = [
-    { key:'prata-tp',    label:'Copart. TP',    badgeCls:'prata-tp-badge',  cardCls:'prata-tp-card',  emoji:'🥈', operadora:'Amil Prata' },
-    { key:'prata-total', label:'Copart. Total',  badgeCls:'prata-tot-badge', cardCls:'prata-tot-card', emoji:'🥈', operadora:'Amil Prata' },
-    { key:'hapvida-qc',  label:'Nosso Plano QC', badgeCls:'hapvida-badge',   cardCls:'hapvida-card',   emoji:'🟣', operadora:'Hapvida' },
+    { key:'hapvida-par', label:'Copart. Parcial', badgeCls:'hapvida-par-badge', cardCls:'hapvida-par-card', emoji:'🟠', operadora:'Hapvida' },
+    { key:'hapvida-tot', label:'Copart. Total',   badgeCls:'hapvida-tot-badge', cardCls:'hapvida-tot-card', emoji:'🟣', operadora:'Hapvida' },
   ];
 
   tiers.forEach(({key,label,badgeCls,cardCls,emoji,operadora}) => {
@@ -551,7 +497,7 @@ function renderPlans() {
       <h4>${label}</h4>
       <div class="plan-price">${fmt(valor)}</div>
       <div class="plan-price-label">/ mês (valor cheio)</div>
-      <div class="plan-coverage">🌍 Cobertura Nacional · ${plano.desc}</div>`;
+      <div class="plan-coverage">📍 Cobertura Regional · ${plano.desc}</div>`;
     grid.appendChild(div);
   });
 
@@ -569,14 +515,13 @@ function renderPlans() {
 
 function selectPlan(key) {
   state.plano = key;
-  ['prata-tp','prata-total','hapvida-qc','nenhum'].forEach(k => {
+  ['hapvida-par','hapvida-tot','nenhum'].forEach(k => {
     const el = document.getElementById('plan-'+k);
     if (el) el.classList.toggle('selected', k === key);
   });
   document.getElementById('btnStep2Next').disabled = false;
   const redeSection = document.getElementById('redeSection');
-  const isAmil = key === 'prata-tp' || key === 'prata-total';
-  if (isAmil) {
+  if (key !== 'nenhum') {
     redeSection.classList.remove('hidden');
     renderRede();
   } else {
@@ -598,11 +543,11 @@ function toggleRede() {
 function renderRede() {
   const filtro = document.getElementById('filtroRede').value;
   const tbody  = document.getElementById('redeTbody');
-  let rows = filtro === 'prata' ? REDE.filter(r => r.prata) : REDE;
+  let rows = filtro === 'todos' ? REDE : REDE.filter(r => r.regiao === filtro);
   tbody.innerHTML = rows.map(r => `
     <tr>
       <td>${r.hospital}</td>
-      <td class="center">${r.prata ? '<span class="check-yes">✔</span>' : '<span class="check-no">—</span>'}</td>
+      <td>${r.regiao}</td>
     </tr>`).join('');
 }
 
@@ -654,16 +599,16 @@ function addDependent() {
   state.dependentes.push({id, nome:'', parentesco:'', faixa:'', valor:0});
 
   const planoKey = (state.plano && state.plano !== 'nenhum') ? state.plano : null;
-  const planoNomes = {'prata-tp':'🥈 Amil Prata (Copart. TP)', 'prata-total':'🥈 Amil Prata (Copart. Total)', 'hapvida-qc':'🟣 Hapvida Nosso Plano QC'};
-  const planoBg    = {'prata-tp':'#F5F7FA', 'prata-total':'#EEF4FF', 'hapvida-qc':'#F5F0FF'};
-  const planoClr   = {'prata-tp':'#4A6070', 'prata-total':'#2563C0', 'hapvida-qc':'#7C3AED'};
+  const planoNomes = {'hapvida-par':'🟠 Hapvida Nosso Plano QC (Copart. Parcial)', 'hapvida-tot':'🟣 Hapvida Nosso Plano QC (Copart. Total)'};
+  const planoBg    = {'hapvida-par':'#FFFBEB', 'hapvida-tot':'#F5F0FF'};
+  const planoClr   = {'hapvida-par':'#D97706', 'hapvida-tot':'#7C3AED'};
 
   const produtoBadge = planoKey
     ? `<div style="display:inline-flex;align-items:center;gap:6px;background:${planoBg[planoKey]};border:1.5px solid ${planoClr[planoKey]}44;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;color:${planoClr[planoKey]};font-family:'Nunito',sans-serif;">${planoNomes[planoKey]}</div>`
     : `<span style="color:#aaa;font-size:13px;font-style:italic;">Titular sem plano</span>`;
 
   const parentOpts = PARENTESCOS.map(p=>`<option value="${p}">${p}</option>`).join('');
-  const faixaOpts  = Object.keys(PLANOS['prata-tp'].valores).map(f=>`<option value="${f}">${f} anos</option>`).join('');
+  const faixaOpts  = Object.keys(PLANOS['hapvida-par'].valores).map(f=>`<option value="${f}">${f} anos</option>`).join('');
 
   const item = document.createElement('div');
   item.className = 'dependent-item';
@@ -717,8 +662,8 @@ function updateDepFaixa(id) {
   const box = document.getElementById(`dep-prices-${id}`);
   if (!faixa || !state.plano || state.plano === 'nenhum') { box.classList.add('hidden'); return; }
   const valor = PLANOS[state.plano].valores[faixa] || 0;
-  const clrMap  = {'prata-tp':'#4A6070','prata-total':'#2563C0','hapvida-qc':'#7C3AED'};
-  const nomeMap = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)','hapvida-qc':'Hapvida Nosso Plano QC'};
+  const clrMap  = {'hapvida-par':'#D97706','hapvida-tot':'#7C3AED'};
+  const nomeMap = {'hapvida-par':'Hapvida Nosso Plano QC (Copart. Parcial)','hapvida-tot':'Hapvida Nosso Plano QC (Copart. Total)'};
   if (dep) dep.valor = valor;
   box.classList.remove('hidden');
   const valEl = document.getElementById(`dep-valor-${id}`);
@@ -746,7 +691,7 @@ function goToStep4() {
 function renderSummary() {
   const box = document.getElementById('summaryBox');
   const planoKey = (state.plano && state.plano !== 'nenhum') ? state.plano : null;
-  const nomeMap  = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)','hapvida-qc':'Hapvida Nosso Plano QC'};
+  const nomeMap  = {'hapvida-par':'Hapvida Nosso Plano QC (Copart. Parcial)','hapvida-tot':'Hapvida Nosso Plano QC (Copart. Total)'};
 
   let valorTitularNum = planoKey ? (PLANOS[planoKey].valores[state.faixa]||0) : 0;
   let planLabel = planoKey ? nomeMap[planoKey] : 'Sem interesse';
@@ -799,7 +744,7 @@ async function sendToSheets() {
   document.getElementById('sendingState').classList.add('show');
 
   const planoKey = (state.plano && state.plano !== 'nenhum') ? state.plano : null;
-  const nomeMap  = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)','hapvida-qc':'Hapvida Nosso Plano QC'};
+  const nomeMap  = {'hapvida-par':'Hapvida Nosso Plano QC (Copart. Parcial)','hapvida-tot':'Hapvida Nosso Plano QC (Copart. Total)'};
   const valorTitular = planoKey ? fmt(PLANOS[planoKey].valores[state.faixa]||0) : '';
   const totalDeps    = state.dependentes.reduce((acc,d)=>acc+(planoKey&&d.faixa?(PLANOS[planoKey].valores[d.faixa]||0):0),0);
   const totalGeral   = (planoKey?PLANOS[planoKey].valores[state.faixa]||0:0)+totalDeps;
