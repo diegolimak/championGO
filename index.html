@@ -89,7 +89,9 @@
   .plan-card:hover { transform: translateY(-3px); box-shadow: var(--shadow); }
   .plan-card.selected.prata-tp-card   { border-color: var(--silver); background: #F5F7FA; }
   .plan-card.selected.prata-tot-card  { border-color: var(--blue); background: var(--blue-pale); }
+  .plan-card.selected.hapvida-card    { border-color: #7C3AED; background: #F5F0FF; }
   .plan-card.selected.no-plan-card    { border-color: #B0BAC8; background: #F7F8FA; }
+  .hapvida-badge { background: rgba(124,58,237,0.10); color: #7C3AED; }
   .plan-tier-badge { font-family: 'Nunito', sans-serif; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 100px; display: inline-block; margin-bottom: 10px; }
   .prata-tp-badge  { background: rgba(122,143,160,0.13); color: #4A6070; }
   .prata-tot-badge { background: rgba(37,99,192,0.10); color: var(--blue); }
@@ -385,6 +387,14 @@ const PLANOS = {
       '19 a 23': 305.07, '24 a 28': 372.18, '29 a 33': 446.62,
       '34 a 38': 468.96, '39 a 43': 515.86, '44 a 48': 644.83
     }
+  },
+  'hapvida-qc': {
+    nome: 'Hapvida — Nosso Plano QC',
+    desc: 'Coparticipação total incluída',
+    valores: {
+      '19 a 23': 169.75, '24 a 28': 190.12, '29 a 33': 218.64,
+      '34 a 38': 251.44, '39 a 43': 299.21, '44 a 48': 374.01
+    }
   }
 };
 
@@ -465,6 +475,18 @@ const COPART = {
       ['Internação','R$ 220,00'],
     ],
     note: '* Coparticipação total já incluída no valor mensal.'
+  },
+  'hapvida-qc': {
+    title: 'Coparticipação — Hapvida Nosso Plano QC',
+    color: '#7C3AED', bgColor: '#F5F0FF',
+    header: ['Informação', 'Detalhe'],
+    rows: [
+      ['Operadora','Hapvida'],
+      ['Produto','Nosso Plano QC'],
+      ['Tipo de Coparticipação','Coparticipação Total'],
+      ['Abrangência','Nacional'],
+    ],
+    note: '* Valores conforme apólice vigente. Coparticipação total já incluída no valor mensal.'
   }
 };
 
@@ -511,11 +533,12 @@ function renderPlans() {
   grid.innerHTML = '';
 
   const tiers = [
-    { key:'prata-tp',    label:'Copart. TP',    badgeCls:'prata-tp-badge',  cardCls:'prata-tp-card',  emoji:'🥈' },
-    { key:'prata-total', label:'Copart. Total',  badgeCls:'prata-tot-badge', cardCls:'prata-tot-card', emoji:'🥈' },
+    { key:'prata-tp',    label:'Copart. TP',    badgeCls:'prata-tp-badge',  cardCls:'prata-tp-card',  emoji:'🥈', operadora:'Amil Prata' },
+    { key:'prata-total', label:'Copart. Total',  badgeCls:'prata-tot-badge', cardCls:'prata-tot-card', emoji:'🥈', operadora:'Amil Prata' },
+    { key:'hapvida-qc',  label:'Nosso Plano QC', badgeCls:'hapvida-badge',   cardCls:'hapvida-card',   emoji:'🟣', operadora:'Hapvida' },
   ];
 
-  tiers.forEach(({key,label,badgeCls,cardCls,emoji}) => {
+  tiers.forEach(({key,label,badgeCls,cardCls,emoji,operadora}) => {
     const plano = PLANOS[key];
     const valor = plano.valores[state.faixa] || 0;
     const div = document.createElement('div');
@@ -524,7 +547,7 @@ function renderPlans() {
     div.onclick = () => selectPlan(key);
     div.innerHTML = `
       <div class="plan-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
-      <div class="plan-tier-badge ${badgeCls}">${emoji} Amil Prata</div>
+      <div class="plan-tier-badge ${badgeCls}">${emoji} ${operadora}</div>
       <h4>${label}</h4>
       <div class="plan-price">${fmt(valor)}</div>
       <div class="plan-price-label">/ mês (valor cheio)</div>
@@ -546,21 +569,21 @@ function renderPlans() {
 
 function selectPlan(key) {
   state.plano = key;
-  ['prata-tp','prata-total','nenhum'].forEach(k => {
+  ['prata-tp','prata-total','hapvida-qc','nenhum'].forEach(k => {
     const el = document.getElementById('plan-'+k);
     if (el) el.classList.toggle('selected', k === key);
   });
   document.getElementById('btnStep2Next').disabled = false;
   const redeSection = document.getElementById('redeSection');
-  if (key !== 'nenhum') {
+  const isAmil = key === 'prata-tp' || key === 'prata-total';
+  if (isAmil) {
     redeSection.classList.remove('hidden');
     renderRede();
-    renderCopart(key);
   } else {
     redeSection.classList.add('hidden');
     document.getElementById('redeContent').style.display = 'none';
-    renderCopart(null);
   }
+  renderCopart(key !== 'nenhum' ? key : null);
 }
 
 // ══ REDE ══
@@ -631,9 +654,9 @@ function addDependent() {
   state.dependentes.push({id, nome:'', parentesco:'', faixa:'', valor:0});
 
   const planoKey = (state.plano && state.plano !== 'nenhum') ? state.plano : null;
-  const planoNomes = {'prata-tp':'🥈 Amil Prata (Copart. TP)', 'prata-total':'🥈 Amil Prata (Copart. Total)'};
-  const planoBg    = {'prata-tp':'#F5F7FA', 'prata-total':'#EEF4FF'};
-  const planoClr   = {'prata-tp':'#4A6070', 'prata-total':'#2563C0'};
+  const planoNomes = {'prata-tp':'🥈 Amil Prata (Copart. TP)', 'prata-total':'🥈 Amil Prata (Copart. Total)', 'hapvida-qc':'🟣 Hapvida Nosso Plano QC'};
+  const planoBg    = {'prata-tp':'#F5F7FA', 'prata-total':'#EEF4FF', 'hapvida-qc':'#F5F0FF'};
+  const planoClr   = {'prata-tp':'#4A6070', 'prata-total':'#2563C0', 'hapvida-qc':'#7C3AED'};
 
   const produtoBadge = planoKey
     ? `<div style="display:inline-flex;align-items:center;gap:6px;background:${planoBg[planoKey]};border:1.5px solid ${planoClr[planoKey]}44;border-radius:8px;padding:6px 14px;font-size:13px;font-weight:700;color:${planoClr[planoKey]};font-family:'Nunito',sans-serif;">${planoNomes[planoKey]}</div>`
@@ -694,8 +717,8 @@ function updateDepFaixa(id) {
   const box = document.getElementById(`dep-prices-${id}`);
   if (!faixa || !state.plano || state.plano === 'nenhum') { box.classList.add('hidden'); return; }
   const valor = PLANOS[state.plano].valores[faixa] || 0;
-  const clrMap  = {'prata-tp':'#4A6070','prata-total':'#2563C0'};
-  const nomeMap = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)'};
+  const clrMap  = {'prata-tp':'#4A6070','prata-total':'#2563C0','hapvida-qc':'#7C3AED'};
+  const nomeMap = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)','hapvida-qc':'Hapvida Nosso Plano QC'};
   if (dep) dep.valor = valor;
   box.classList.remove('hidden');
   const valEl = document.getElementById(`dep-valor-${id}`);
@@ -723,7 +746,7 @@ function goToStep4() {
 function renderSummary() {
   const box = document.getElementById('summaryBox');
   const planoKey = (state.plano && state.plano !== 'nenhum') ? state.plano : null;
-  const nomeMap  = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)'};
+  const nomeMap  = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)','hapvida-qc':'Hapvida Nosso Plano QC'};
 
   let valorTitularNum = planoKey ? (PLANOS[planoKey].valores[state.faixa]||0) : 0;
   let planLabel = planoKey ? nomeMap[planoKey] : 'Sem interesse';
@@ -776,7 +799,7 @@ async function sendToSheets() {
   document.getElementById('sendingState').classList.add('show');
 
   const planoKey = (state.plano && state.plano !== 'nenhum') ? state.plano : null;
-  const nomeMap  = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)'};
+  const nomeMap  = {'prata-tp':'Amil Prata (Copart. TP)','prata-total':'Amil Prata (Copart. Total)','hapvida-qc':'Hapvida Nosso Plano QC'};
   const valorTitular = planoKey ? fmt(PLANOS[planoKey].valores[state.faixa]||0) : '';
   const totalDeps    = state.dependentes.reduce((acc,d)=>acc+(planoKey&&d.faixa?(PLANOS[planoKey].valores[d.faixa]||0):0),0);
   const totalGeral   = (planoKey?PLANOS[planoKey].valores[state.faixa]||0:0)+totalDeps;
